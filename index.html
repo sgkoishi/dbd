@@ -1,0 +1,89 @@
+<html>
+
+  <head>
+    <title>Canvas</title>
+  </head>
+
+  <body>
+    <canvas id="myCanvas" width="500" height="150"></canvas>
+    <h1>Heading 1</h1>
+  </body>
+  <script type="text/javascript">
+    var particles = [];
+    var particleCount = 30;
+    var maxVelocity = 3;
+    var targetFPS = 33;
+    var canvasId = "myCanvas";
+    var actualCanvasWidth = document.getElementById(canvasId).width;
+    var canvasWidth = actualCanvasWidth - 100;
+    var canvasHeight = document.getElementById(canvasId).height;
+    var imageObj = new Image();
+    imageObj.onload = function() {
+      particles.forEach(function(particle) {
+        particle.image = imageObj;
+      });
+    };
+    imageObj.src = "http://www.blog.jonnycornwell.com/wp-content/uploads/2012/07/Smoke10.png";
+
+    function Particle(context) {
+      this.x = generateRandom(0, canvasWidth);
+      this.y = generateRandom(0, canvasHeight);
+      this.xVelocity = generateRandom(0, maxVelocity);
+      this.rotationSpeed = generateRandom(-Math.PI, Math.PI) / targetFPS / 5;
+      this.rotation = 0;
+      this.rightBorder = generateRandom(canvasWidth / 2, canvasWidth);
+      this.context = context;
+      this.draw = function() {
+        if (this.image) {
+          this.context.translate(this.x, this.y);
+          this.context.rotate(this.rotation);
+          this.context.globalCompositeOperation = "source-over";
+          this.context.globalAlpha = 1 - ((this.x + 128) / (this.rightBorder + 228));
+          this.context.drawImage(this.image, -128, -128);
+          this.context.globalAlpha = 1;
+          this.context.rotate(-this.rotation);
+          this.context.translate(-this.x, -this.y);
+        }
+      };
+      this.update = function() {
+        this.rotation += this.rotationSpeed;
+        this.x += this.xVelocity;
+        if (this.x - 100 >= this.rightBorder) {
+          this.x = -128;
+        }
+      };
+    }
+
+    function generateRandom(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+    var context;
+    var canvas = document.getElementById(canvasId);
+    if (canvas.getContext) {
+      context = canvas.getContext('2d');
+      for (var i = 0; i < particleCount; ++i) {
+        particles.push(new Particle(context));
+      }
+    } else {
+      alert("Please use a modern browser");
+    }
+    if (context) {
+      setInterval(function() {
+        particles.forEach(function(particle) {
+          particle.update();
+        });
+        context.globalCompositeOperation = "source-over";
+        context.fillStyle = "rgba(0, 0, 0, 0.5)";
+        context.fillRect(0, 0, actualCanvasWidth, canvasHeight);
+        particles.forEach(function(particle) {
+          particle.draw();
+        });
+        context.globalCompositeOperation = "color";
+        context.fillStyle = "rgba(90,40,110,1)"; // "hsl(280,65%, 40%)";
+        context.fillRect(0, 0, actualCanvasWidth, canvasHeight);
+      }, 1000 / targetFPS);
+    }
+
+  </script>
+
+</html>
