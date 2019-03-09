@@ -196,13 +196,11 @@
     if (x + canvasItem.clientWidth < document.documentElement.clientWidth - 25) {
       canvasItem.style.left = x + 25;
     } else {
-      console.log("x", x, x + canvasItem.clientWidth < document.documentElement.clientWidth - 25, x - canvasItem.clientWidth < 25);
       canvasItem.style.left = x - canvasItem.clientWidth - 25;
     }
     if (y + canvasItem.clientHeight < window.innerHeight - 25) {
       canvasItem.style.top = y + 25;
     } else {
-      console.log("y", y, y + canvasItem.clientHeight < window.innerHeight - 25, y - canvasItem.clientHeight < 25);
       canvasItem.style.top = y - canvasItem.clientHeight - 25;
     }
   }
@@ -237,7 +235,6 @@
   }
   function perkOnEnter(e) {
     var item = localStorage.getItem(e.target.dataset.perk) || localStorage.getItem("unrevealed");
-    console.log("OnEnter: " + item);
     canvasTitle.innerHTML = JSON.parse(item)[language];
   }
   fetch("https://www.sgkoishi.app/dbddata/static/killerperks.json").then(r => r.json()).then(r => {
@@ -252,10 +249,8 @@
       element.addEventListener("mouseenter", perkOnEnter);
       document.getElementById("main").appendChild(element);
     });
-    console.log("Killer perks loaded.");
   })
   fetch("https://www.sgkoishi.app/dbddata/static/unrevealed.json").then(r => r.json()).then(r => {
-    console.log("Unrevealed loaded.");
     localStorage.setItem("unrevealed", JSON.stringify(r));
   })
 </script>
