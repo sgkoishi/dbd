@@ -33,6 +33,7 @@
   #canvasWrap {
     position: fixed;
     width: 500px;
+    display: none;
   }
 
   #overlay {
@@ -105,9 +106,8 @@
     <canvas id="canvasBackground" width="500" height="150"></canvas>
     <div id="overlay">
       <div class="vcenter">
-        <div id="canvasTitle" class="pr" style="font-family: Roboto; left: 10%; font-size: 36px; color: white">Corrupt
-          Intervention</div>
-        <div id="canvasDesc" class="pr" style="left: 10%; font-size: 18px; color: white">稀少 - 瘟疫 - 技能</div>
+        <div id="canvasTitle" class="pr" style="font-family: Roboto; left: 10%; font-size: 36px; color: white">未揭示</div>
+        <div id="canvasDesc" class="pr" style="left: 10%; font-size: 18px; color: white">常见 - 【角色】 - 技能</div>
       </div>
     </div>
     <div id="wrapDetail" style="height: 150px;">
@@ -115,6 +115,7 @@
   </div>
 </body>
 <script type="text/javascript">
+  var bgColor = "rgba(90, 65, 50, 1)";
   var particles = [];
   var particleCount = 30;
   var targetFPS = 33;
@@ -184,7 +185,7 @@
         particle.draw();
       });
       context.globalCompositeOperation = "color";
-      context.fillStyle = "rgba(90,40,110,1)"; // "hsl(280,65%, 40%)";
+      context.fillStyle = bgColor;
       context.fillRect(0, 0, actualCanvasWidth, canvasHeight);
     }, 1000 / targetFPS);
   }
@@ -192,7 +193,13 @@
 </script>
 <script>
   var canvasItem = document.getElementById("canvasWrap");
+  var mainItem = document.getElementById("main");
   function moveCanvas(x, y) {
+    if (x > main.getBoundingClientRect().right || x < main.getBoundingClientRect().left) {
+      canvasItem.style.display = "none";
+    } else {
+      canvasItem.style.display = "initial";
+    }
     if (x + canvasItem.clientWidth < document.documentElement.clientWidth - 25) {
       canvasItem.style.left = x + 25;
     } else {
@@ -222,20 +229,60 @@
   }
   function perkOnClick(e) {
     var key = e.target.parentNode.dataset.perk;
-    fetch("https://www.sgkoishi.app/dbddata/" + key + "/data.json").then(r => {
+    fetch(`https://www.sgkoishi.app/dbddata/${key}/owner.json`).then(r => {
       return r.json();
     }).then(r => {
-      setTimeout(() => { canvasTitle.innerHTML = r[language]; }, 750);
+      localStorage.setItem(key + ".owner", r.owner);
+      var ownerCode = r.owner;
+      fetch(`https://www.sgkoishi.app/dbddata/${r.owner}/data.json`).then(r => {
+        return r.json();
+      }).then(r => {
+        localStorage.setItem(ownerCode, JSON.stringify(r));
+        updateCanvas(key);
+      });
+    });
+    fetch(`https://www.sgkoishi.app/dbddata/${key}/rarity.json`).then(r => {
+      return r.json();
+    }).then(r => {
+      localStorage.setItem(key + ".rarity", JSON.stringify(r));
+      updateCanvas(key);
+    });
+    fetch(`https://www.sgkoishi.app/dbddata/${key}/data.json`).then(r => {
+      return r.json();
+    }).then(r => {
       e.target.parentNode.classList.remove("unrevealed");
-      e.target.parentNode.children[1].style.backgroundImage = "url(https://www.sgkoishi.app/dbddata/" + key + "/icon.png)";
+      e.target.parentNode.children[1].style.backgroundImage = `url(https://www.sgkoishi.app/dbddata/${key}/icon.png)`;
       localStorage.setItem(key, JSON.stringify(r));
+      updateCanvas(key);
     }, (r) => {
       console.log(r);
     });
   }
   function perkOnEnter(e) {
-    var item = localStorage.getItem(e.target.dataset.perk) || localStorage.getItem("unrevealed");
+    updateCanvas(e.target.dataset.perk);
+  }
+  function updateCanvas(perkCode) {
+    var item = localStorage.getItem(perkCode)
+    var owner = perkCode + ".owner";
+    var ownerCode = localStorage.getItem(owner);
+    var rarity = localStorage.getItem(perkCode + ".rarity");
+    if (!item) {
+      ownerCode = "unrevealed.owner";
+      item = localStorage.getItem("unrevealed");
+      rarity = [0, 0, 0];
+    }
+    else {
+      rarity = JSON.parse(rarity);
+    }
     canvasTitle.innerHTML = JSON.parse(item)[language];
+    bgColor = JSON.parse(localStorage.getItem("raritycolor"))[rarity[1]];
+    var ownerData = localStorage.getItem(ownerCode);
+    var ownerText = "";
+    if (ownerData) {
+      canvasDesc.innerHTML = `${(JSON.parse(localStorage.getItem("rarity"))[rarity[1]])} - ${JSON.parse(localStorage.getItem(ownerCode))[language]} - 技能`;
+    } else {
+      canvasDesc.innerHTML = `${(JSON.parse(localStorage.getItem("rarity"))[rarity[1]])} - 技能`;
+    }
   }
   fetch("https://www.sgkoishi.app/dbddata/static/killerperks.json").then(r => r.json()).then(r => {
     var perksShuffled = shuffleArray(r);
@@ -250,9 +297,12 @@
       document.getElementById("main").appendChild(element);
     });
   })
-  fetch("https://www.sgkoishi.app/dbddata/static/unrevealed.json").then(r => r.json()).then(r => {
-    localStorage.setItem("unrevealed", JSON.stringify(r));
-  })
+  var list = ["unrevealed", "unrevealed.owner", "rarity", "raritycolor"];
+  list.forEach(element => {
+    fetch(`https://www.sgkoishi.app/dbddata/static/${element}.json`).then(r => r.json()).then(r => {
+      localStorage.setItem(element, JSON.stringify(r));
+    })
+  });
 </script>
 
 </html>
