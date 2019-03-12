@@ -34,48 +34,17 @@
   </div>
 </body>
 <script type="text/javascript">
-var language = localStorage.getItem("language") || "zh-Hans";
+let language = localStorage.getItem("language") || "zh-Hans";
 localStorage.setItem("language", language);
 
 function shuffleArray(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = array[i];
+    for (let i = array.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i + 1));
+        let temp = array[i];
         array[i] = array[j];
         array[j] = temp;
     }
     return array;
-}
-
-function perkOnClick(key) {
-    fetch(`https://www.sgkoishi.app/dbddata/${key}/owner.json`).then(r => {
-        return r.json();
-    }).then(r => {
-        localStorage.setItem(key + ".owner", r.owner);
-        var ownerCode = r.owner;
-        fetch(`https://www.sgkoishi.app/dbddata/${r.owner}/data.json`).then(r => {
-            return r.json();
-        }).then(r => {
-            localStorage.setItem(ownerCode, JSON.stringify(r));
-            updateCanvas(key);
-        });
-    });
-    fetch(`https://www.sgkoishi.app/dbddata/${key}/rarity.json`).then(r => {
-        return r.json();
-    }).then(r => {
-        localStorage.setItem(key + ".rarity", JSON.stringify(r));
-        updateCanvas(key);
-    });
-    fetch(`https://www.sgkoishi.app/dbddata/${key}/data.json`).then(r => {
-        return r.json();
-    }).then(r => {
-        // e.target.parentNode.classList.remove("unrevealed");
-        // e.target.parentNode.children[1].style.backgroundImage = `url(https://www.sgkoishi.app/dbddata/${key}/icon.png)`;
-        localStorage.setItem(key, JSON.stringify(r));
-        updateCanvas(key);
-    }, (r) => {
-        console.log(r);
-    });
 }
 
 function perkOnEnter(e) {
@@ -83,10 +52,10 @@ function perkOnEnter(e) {
 }
 
 function updateCanvas(perkCode) {
-    var item = localStorage.getItem(perkCode)
-    var owner = perkCode + ".owner";
-    var ownerCode = localStorage.getItem(owner);
-    var rarity = localStorage.getItem(perkCode + ".rarity");
+    let item = localStorage.getItem(perkCode)
+    let owner = perkCode + ".owner";
+    let ownerCode = localStorage.getItem(owner);
+    let rarity = localStorage.getItem(perkCode + ".rarity");
     if (!item) {
         ownerCode = "unrevealed.owner";
         item = localStorage.getItem("unrevealed");
@@ -96,17 +65,17 @@ function updateCanvas(perkCode) {
     }
     canvasTitle.innerHTML = JSON.parse(item)[language];
     bgColor = JSON.parse(localStorage.getItem("raritycolor"))[rarity[1]];
-    var ownerData = localStorage.getItem(ownerCode);
-    var ownerText = "";
+    let ownerData = localStorage.getItem(ownerCode);
+    let ownerText = "";
     if (ownerData) {
-        canvasDesc.innerHTML = `${(JSON.parse(localStorage.getItem("rarity"))[rarity[1]])} - ${JSON.parse(localStorage.getItem(ownerCode))[language]} - 技能`;
+        canvasDesc.innerHTML = (JSON.parse(localStorage.getItem("rarity"))[rarity[1]]) + " - " + JSON.parse(localStorage.getItem(ownerCode))[language] + " - 技能";
     } else {
-        canvasDesc.innerHTML = `${(JSON.parse(localStorage.getItem("rarity"))[rarity[1]])} - 技能`;
+        canvasDesc.innerHTML = "" + (JSON.parse(localStorage.getItem("rarity"))[rarity[1]]) + " - 技能";
     }
 }
-var list = ["unrevealed", "unrevealed.owner", "rarity", "raritycolor"];
+let list = ["unrevealed", "unrevealed.owner", "rarity", "raritycolor"];
 list.forEach(element => {
-    fetch(`https://www.sgkoishi.app/dbddata/static/${element}.json`).then(r => r.json()).then(r => {
+    fetch("https://www.sgkoishi.app/dbddata/static/" + element + ".json").then(r => r.json()).then(r => {
         localStorage.setItem(element, JSON.stringify(r));
     })
 });
@@ -119,67 +88,71 @@ function randomArray(min, max, length, isint) {
             length: length
         }, () => Math.random() * (max - min) + min);
 }
-var expWidth = 1200;
-var expHeight = 1000;
-var scene = new THREE.Scene();
-var camera = new THREE.OrthographicCamera(0, 10, 0, 10, -5, 5);
-var camera2 = new THREE.OrthographicCamera(10, 20, 1.5, -1.5, -2, 2);
-var renderer = new THREE.WebGLRenderer({
+let expWidth = 1200;
+let expHeight = 1000;
+let scene = new THREE.Scene();
+let camera = new THREE.OrthographicCamera(0, 10, 0, 10, -5, 5);
+let camera2 = new THREE.OrthographicCamera(10, 20, 1.5, -1.5, -2, 2);
+let renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true
 });
 renderer.setClearColor("rgb(255, 0, 0)", 0);
 renderer.setSize(expWidth, expHeight);
 document.getElementById("main").appendChild(renderer.domElement);
-var mouse = new THREE.Vector2(-100, -100);
-var floating = new THREE.Vector2(-600, -600);
-var mouseDown = false;
-var pureMouse = new THREE.Vector2(-100, -100);
-var loader = new THREE.TextureLoader();
-var materialPerk = new THREE.MeshLambertMaterial({
-    map: loader.load("https://www.sgkoishi.app/dbddata/static/perks.png"),
+let mouse = new THREE.Vector2(-100, -100);
+let floating = new THREE.Vector2(-600, -600);
+let mouseDown = false;
+let pureMouse = new THREE.Vector2(-100, -100);
+let inCMouse = new THREE.Vector2(-100, -100);
+let loader = new THREE.TextureLoader();
+let perkImg = loader.load("https://www.sgkoishi.app/dbddata/static/perks.png");
+let materialPerk = new THREE.MeshLambertMaterial({
+    map: perkImg,
     transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     depthTest: false
 });
-var geometry = new THREE.PlaneGeometry(1, 1);
-var blackBg = new THREE.Mesh(geometry);
+let geometry = new THREE.PlaneGeometry(1, 1);
+let blackBg = new THREE.Mesh(geometry);
 blackBg.material.color.set(0);
 blackBg.position.set(15, 0, 0);
 blackBg.scale.set(10, 3, 1);
 scene.add(blackBg);
-var materialSmoke = new THREE.MeshLambertMaterial({
+let materialSmoke = new THREE.MeshLambertMaterial({
     map: loader.load("https://www.sgkoishi.app/dbd/smoke.png"),
     transparent: true,
     depthWrite: false,
     depthTest: false
 });
 materialSmoke.color.set("rgb(90, 40, 110)");
-var meshSmokes = [];
-for (var i = 0; i < 60; i++) {
-    var meshSmoke = new THREE.Mesh(geometry, materialSmoke.clone());
-    meshSmoke.userVX = (Math.random() * 8 + 2) / 360;
+let meshSmokes = [];
+for (let i = 0; i < 60; i++) {
+    let meshSmoke = new THREE.Mesh(geometry, materialSmoke.clone());
+    meshSmoke.userVX = (Math.random() * 8 + 2) / 240;
     meshSmoke.userBX = (Math.random() * 5) + 16;
     meshSmoke.userY = Math.random() * 3 - 1.5;
     meshSmoke.userRS = ((Math.random() * 2 - 1) * Math.PI) / 360;
-    meshSmoke.position.set(Math.random() * 4 + 10, meshSmoke.userY, 0);
+    meshSmoke.position.set(Math.random() * 12 + 6, meshSmoke.userY, 0);
     meshSmoke.scale.set(4, 4, 4);
     meshSmokes.push(meshSmoke);
     scene.add(meshSmoke);
 }
-var bitmap = document.createElement('canvas');
-var g = bitmap.getContext('2d');
-var floatingTitle = "把最好的留到最后";
-bitmap.width = 84 * 9;
-bitmap.height = 84;
-g.font = 'Bold 72px Arial';
-g.fillStyle = 'white';
-g.fillText(floatingTitle, 0, 70);
-var texture = new THREE.Texture(bitmap)
-texture.needsUpdate = true;
-var textBg = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-    map: texture,
+function makeText(t, font, width, height, textx, texty, fillstyle) {
+    let bitmap = document.createElement('canvas');
+    let g = bitmap.getContext('2d');
+    bitmap.width = width;
+    bitmap.height = height;
+    g.font = font;
+    g.fillStyle = fillstyle;
+    g.fillText(t, textx, texty);
+    let texture = new THREE.Texture(bitmap)
+    texture.needsUpdate = true;
+    return texture;
+}
+let textBg = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+    map: makeText("把最好的留到最后","Bold 72px Arial", 84*9, 84, 0, 70, "white"),
     transparent: true
 }));
 //blackBg.material.color.set(0);
@@ -190,48 +163,122 @@ scene.add(textBg);
 // https://www.sgkoishi.app/dbddata/static/perks.png
 // https://www.sgkoishi.app/dbd/smoke.png
 
-var meshPerks = [];
+let meshPerks = [];
 fetch("https://www.sgkoishi.app/dbddata/static/killerperks.json").then(r => r.json()).then(r => {
-    var perksShuffled = shuffleArray(r);
-	for (var i = 0; i < perksShuffled.length; i++)
-	{
-    var meshPerk = new THREE.Mesh(geometry, materialPerk);
-    meshPerk.position.set(0.5 + i % 10, 2.5 + parseInt(i / 10), 0);
-    meshPerk.rotation.y = Math.PI;
-    meshPerk.scale.y = -1;
-	meshPerk.userPerkCode = perksShuffled[i];
-    meshPerks.push(meshPerk);
-    scene.add(meshPerk);
-	}
+    let perksShuffled = shuffleArray(r);
+    for (let i = 0; i < perksShuffled.length; i++)
+    {
+        let meshPerk = new THREE.Mesh(geometry, materialPerk);
+        meshPerk.position.set(0.5 + i % 10, 2.5 + parseInt(i / 10), 0);
+        meshPerk.rotation.y = Math.PI;
+        meshPerk.scale.y = -1;
+        meshPerk.userPerkCode = perksShuffled[i];
+        meshPerks.push(meshPerk);
+        scene.add(meshPerk);
+    }
 });
-var light = new THREE.AmbientLight(0xffffff); // soft white light
+let light = new THREE.AmbientLight(0xffffff, 2); // soft white light
 scene.add(light);
-var now = Date.now();
+let now = Date.now();
 
 function animate() {
     requestAnimationFrame(animate);
-    for (var i = 0; i < meshPerks.length; i++) {
+    if (mouseDown) {
+        let xMatch = Math.abs(mouse.x % 1 - 0.5);
+        let yMatch = Math.abs(mouse.y % 1 - 0.5);
+        if (xMatch + yMatch < 0.4 && Math.abs(xMatch - yMatch) < 0.4)
+        {
+            let i = Math.round(Math.round(mouse.x - 0.5) + Math.round(mouse.y - 2.5) * 10);
+            if (!meshPerks[i].userFetch) {
+                meshPerks[i].userFetch = true;
+                let key = meshPerks[i].userPerkCode;
+                fetch("https://www.sgkoishi.app/dbddata/" + key + "/owner.json").then(r => {
+                    return r.json();
+                }).then(r => {
+                    localStorage.setItem(key + ".owner", r.owner);
+                    let ownerCode = r.owner;
+                    if (!localStorage.getItem(ownerCode)) {
+                        fetch("https://www.sgkoishi.app/dbddata/" + ownerCode + "/data.json").then(r => {
+                            return r.json();
+                        }).then(r => {
+                            localStorage.setItem(ownerCode, JSON.stringify(r));
+                        });
+                    }
+                }, e => {});
+                fetch("https://www.sgkoishi.app/dbddata/" + key + "/rarity.json").then(r => {
+                    return r.json();
+                }).then(r => {
+                    localStorage.setItem(key + ".rarity", JSON.stringify(r));
+                });
+                fetch("https://www.sgkoishi.app/dbddata/" + key + "/data.json").then(r => {
+                    return r.json();
+                }).then(r => {
+                    localStorage.setItem(key, JSON.stringify(r));
+                    meshPerks[i].shouldRotate = true;
+                    meshPerks[i].newTexture = loader.load("https://www.sgkoishi.app/dbddata/" + key + "/icon.png");
+                }, (r) => {
+                    console.log(r);
+                });
+            }
+        }
+    }
+    for (let i = 0; i < meshPerks.length; i++) {
         let meshPerk = meshPerks[i];
         if (meshPerk.shouldRotate) {
             if (meshPerk.rotation.y < Math.PI * 1.5) {
                 meshPerk.rotation.y += Math.PI / 120;
-            } else
-            if (!meshPerk.userDataInit) {
+            } else if (!meshPerk.userDataInit) {
+                meshPerk.userDataInit = true;
                 meshPerk.material = meshPerk.material.clone();
                 meshPerk.material.color.set(0x5A413E);
-                meshPerk.userDataInit = true;
+                meshPerk.material = new THREE.ShaderMaterial({
+    vertexShader: `
+varying vec2 vUv;
+void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`,
+    fragmentShader: `
+uniform sampler2D textureA;
+uniform sampler2D textureB;
+uniform vec3 color;
+varying vec2 vUv;
+void main() {
+    vec3 c;
+    vec2 scaledvuv = vUv;
+    scaledvuv -= vec2(0.5);
+    scaledvuv = mat2(1.8, 0.0, 0.0, 1.8) * scaledvuv;
+    scaledvuv += vec2(0.5);
+    scaledvuv.x -= 0.025;
+    vec4 Ca = texture2D(textureA, vUv);
+    vec4 Cb = texture2D(textureB, scaledvuv);
+    c = Cb.rgb * Cb.a + Ca.rgb * Ca.a * (1.0 - Cb.a);
+    gl_FragColor= vec4(c, 1.0);
+    if (Ca.a < 0.5) 
+    {
+        gl_FragColor.a = 0.0;
+    }
+}`,
+    uniforms: {
+        textureA: { type: "t", value: perkImg },
+        textureB: { type: "t", value: meshPerk.newTexture }
+    },
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    depthTest: false
+});
             } else if (meshPerk.rotation.y < Math.PI * 2) {
                 meshPerk.rotation.y += Math.PI / 120;
             }
         }
     }
-    for (var i = 0; i < meshSmokes.length; i++) {
+    for (let i = 0; i < meshSmokes.length; i++) {
         meshSmokes[i].position.x += meshSmokes[i].userVX;
         if (meshSmokes[i].position.x > meshSmokes[i].userBX) {
             meshSmokes[i].position.x = 8;
-			meshSmokes[i].material.opacity = 1;
+            meshSmokes[i].material.opacity = 1;
         } else {
-            //meshSmokes[i].material.opacity = 1 - (meshSmokes[i].position.x - 9) / (meshSmokes[i].userBX - 8);
+            meshSmokes[i].material.opacity = 1 - (meshSmokes[i].position.x - 9) / (meshSmokes[i].userBX - 8);
         }
         meshSmokes[i].rotation.z += meshSmokes[i].userRS;
     }
@@ -249,16 +296,14 @@ function animate() {
 }
 
 function updateMouse() {
-    var pageScrollX = window.pageXOffset || document.documentElement.scrollLeft || document.body.scrollLeft || 0;
-    var pageScrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    mouse.x = ((pureMouse.x - document.getElementById("main").getBoundingClientRect().x - pageScrollX) / Math.min(expWidth, window.innerWidth)) * 2 - 1;
-    mouse.y = -((pureMouse.y - document.getElementById("main").getBoundingClientRect().y + pageScrollY) / Math.min(expHeight, window.innerHeight)) * 2 + 1;
+    mouse.x = ((pureMouse.x - document.getElementById("main").getBoundingClientRect().x) / Math.min(expWidth, window.innerWidth)) * 10;
+    mouse.y = ((pureMouse.y - document.getElementById("main").getBoundingClientRect().y) / Math.min(expHeight, window.innerHeight)) * 8.35 + 1.65;
     floating.x = pureMouse.x - document.getElementById("main").getBoundingClientRect().x;
-	if (floating.x < 0) floating.x = 0;
-	else if (floating.x > expWidth) floating.x = 700;
-	else if (floating.x + 500 > expWidth) floating.x -= 500;
+    if (floating.x < 0) floating.x = 0;
+    else if (floating.x > expWidth) floating.x = 700;
+    else if (floating.x + 500 > expWidth) floating.x -= 500;
     floating.y = expHeight - pureMouse.y + document.getElementById("main").getBoundingClientRect().y - 150;
-	if (floating.y < 0) floating.y += 150;
+    if (floating.y < 0) floating.y += 150;
 }
 window.addEventListener('mousemove', (event) => {
     pureMouse.x = event.clientX
