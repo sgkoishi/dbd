@@ -74,11 +74,8 @@ function updateCanvas(perkCode) {
     }
 }
 let list = ["unrevealed", "unrevealed.owner", "rarity", "raritycolor"];
-list.forEach(element => {
-    fetch("https://www.sgkoishi.app/dbddata/static/" + element + ".json").then(r => r.json()).then(r => {
-        localStorage.setItem(element, JSON.stringify(r));
-    })
-});
+let globalDict = {};
+list.forEach(element => fetch("https://www.sgkoishi.app/dbddata/static/" + element + ".json").then(r => r.json()).then(r => globalDict[element] = r));
 
 function randomArray(min, max, length, isint) {
     return isint ? Array.from({
@@ -169,9 +166,9 @@ fetch("https://www.sgkoishi.app/dbddata/static/killerperks.json").then(r => r.js
     for (let i = 0; i < perksShuffled.length; i++)
     {
         let meshPerk = new THREE.Mesh(geometry, materialPerk);
-        meshPerk.position.set(0.5 + i % 10, 2.5 + parseInt(i / 10), 0);
+        meshPerk.position.set(0.5 + (i % 10), 2.5 + parseInt(i / 10), 0);
         meshPerk.rotation.y = Math.PI;
-        meshPerk.scale.y = -1;
+        meshPerk.scale.set(1.25, -1.25, 1);
         meshPerk.userPerkCode = perksShuffled[i];
         meshPerks.push(meshPerk);
         scene.add(meshPerk);
@@ -195,25 +192,25 @@ function animate() {
                 fetch("https://www.sgkoishi.app/dbddata/" + key + "/owner.json").then(r => {
                     return r.json();
                 }).then(r => {
-                    localStorage.setItem(key + ".owner", r.owner);
+                    globalDict[key + ".owner"] = r.owner;
                     let ownerCode = r.owner;
-                    if (!localStorage.getItem(ownerCode)) {
+                    if (!globalDict[ownerCode]) {
                         fetch("https://www.sgkoishi.app/dbddata/" + ownerCode + "/data.json").then(r => {
                             return r.json();
                         }).then(r => {
-                            localStorage.setItem(ownerCode, JSON.stringify(r));
+                            globalDict[ownerCode] = r;
                         });
                     }
                 }, e => {});
                 fetch("https://www.sgkoishi.app/dbddata/" + key + "/rarity.json").then(r => {
                     return r.json();
                 }).then(r => {
-                    localStorage.setItem(key + ".rarity", JSON.stringify(r));
+                    globalDict[key + ".rarity"] = r;
                 });
                 fetch("https://www.sgkoishi.app/dbddata/" + key + "/data.json").then(r => {
                     return r.json();
                 }).then(r => {
-                    localStorage.setItem(key, JSON.stringify(r));
+                    globalDict[key] = r;
                     meshPerks[i].shouldRotate = true;
                     meshPerks[i].newTexture = loader.load("https://www.sgkoishi.app/dbddata/" + key + "/icon.png");
                 }, (r) => {
@@ -229,8 +226,9 @@ function animate() {
                 meshPerk.rotation.y += Math.PI / 120;
             } else if (!meshPerk.userDataInit) {
                 meshPerk.userDataInit = true;
-                meshPerk.material = meshPerk.material.clone();
-                meshPerk.material.color.set(0x5A413E);
+				let colorRarity = globalDict["raritycolor"][globalDict[meshPerk.userPerkCode + ".rarity"][1]];
+				console.log(colorRarity);
+				console.log(globalDict[meshPerk.userPerkCode + ".rarity"]);
                 meshPerk.material = new THREE.ShaderMaterial({
     vertexShader: `
 varying vec2 vUv;
@@ -242,6 +240,7 @@ void main() {
 uniform sampler2D textureA;
 uniform sampler2D textureB;
 uniform vec3 color;
+uniform vec3 perkRarity;
 varying vec2 vUv;
 void main() {
     vec3 c;
@@ -251,6 +250,7 @@ void main() {
     scaledvuv += vec2(0.5);
     scaledvuv.x -= 0.025;
     vec4 Ca = texture2D(textureA, vUv);
+	Ca.rgb *= mat3(perkRarity.r, 0, 0, 0, perkRarity.g, 0, 0, 0, perkRarity.b);
     vec4 Cb = texture2D(textureB, scaledvuv);
     c = Cb.rgb * Cb.a + Ca.rgb * Ca.a * (1.0 - Cb.a);
     gl_FragColor= vec4(c, 1.0);
@@ -261,8 +261,10 @@ void main() {
 }`,
     uniforms: {
         textureA: { type: "t", value: perkImg },
-        textureB: { type: "t", value: meshPerk.newTexture }
+        textureB: { type: "t", value: meshPerk.newTexture },
+		perkRarity: { value: new THREE.Color(colorRarity) }
     },
+	transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     depthTest: false
