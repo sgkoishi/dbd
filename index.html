@@ -27,7 +27,7 @@
   .fixb {
     position: fixed;
     bottom: 0;
-	text-align: center;
+    text-align: center;
   }
 </style>
 <body>
@@ -109,6 +109,11 @@ blackBg.material.color.set(0);
 blackBg.position.set(15, 0, 0);
 blackBg.scale.set(10, 3, 1);
 scene.add(blackBg);
+let timeUniforms = [];
+let cloudTimeUniforms = {
+    time: { value: 0 }
+};
+timeUniforms.push(cloudTimeUniforms);
 let cloudShaderMaterial = new THREE.ShaderMaterial({
     vertexShader: `
 varying vec2 vUv;
@@ -219,10 +224,8 @@ void main()
     vec3(cloudIntensity1 * clouds(vUv))) * (1.5 - vUv.x) * 
     mat3(90.0 / 255.0, 0.0, 0.0, 0.0, 65.0 / 255.0, 0.0, 0.0, 0.0, 50.0 / 255.0), 1.0);
 }`,
-    uniforms: {
-        time: { value: 0 }
-    },
-	transparent: true,
+    uniforms: cloudTimeUniforms,
+    transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     depthTest: false
@@ -262,7 +265,7 @@ function makeText(t, font, width, height, textx, texty, fillstyle) {
     return texture;
 }
 let textBg = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-    map: makeText("把最好的留到最后","Bold 72px Arial", 84*9, 84, 0, 70, "white"),
+    map: makeText("","Bold 72px Arial", 84*9, 84, 0, 70, "white"),
     transparent: true
 }));
 //blackBg.material.color.set(0);
@@ -331,37 +334,48 @@ function animate() {
                 });
             }
         } else {
-		    if (forceUpdateF || (meshItems[i] !== undefined && meshItems[i].userItemCode !== currentItem)){
-		        let ItemName = globalDict[meshItems[i].userItemCode];
-				let rarityColor = globalDict["raritycolor"][0];
-				let displayText = globalDict["unrevealed"][language];
-			    if (ItemName) {
-		            displayText = ItemName[language];
-		            rarityColor = globalDict["raritycolor"][globalDict[meshItems[i].userItemCode + ".rarity"][1]];
-			    }
-		        textBg.material = new THREE.MeshLambertMaterial({
-			        map: makeText(displayText, "Bold 72px Arial", 84 * 9, 84, 0, 70, "white"),
-			        transparent: true
-			    });
-		        for (let i = 0; i < meshSmokes.length; i++) {
-				    meshSmokes[i].material.color.set(rarityColor);
-		        }
-				forceUpdateF = false;
-			}
-		}
-		if (i < meshItems.length) {
-		    currentItem = meshItems[i].userItemCode;
-		}
+            if (forceUpdateF || (meshItems[i] !== undefined && meshItems[i].userItemCode !== currentItem)){
+                let ItemName = globalDict[meshItems[i].userItemCode];
+                let rarityColor = globalDict["raritycolor"][0];
+                let displayText = globalDict["unrevealed"][language];
+                if (ItemName) {
+                    displayText = ItemName[language];
+                    rarityColor = globalDict["raritycolor"][globalDict[meshItems[i].userItemCode + ".rarity"][1]];
+                }
+                textBg.material = new THREE.MeshLambertMaterial({
+                    map: makeText(displayText, "Bold 72px Arial", 84 * 9, 84, 0, 70, "white"),
+                    transparent: true
+                });
+                for (let i = 0; i < meshSmokes.length; i++) {
+                    meshSmokes[i].material.color.set(rarityColor);
+                }
+                forceUpdateF = false;
+            }
+        }
+        if (i < meshItems.length) {
+            currentItem = meshItems[i].userItemCode;
+        }
     }
     for (let i = 0; i < meshItems.length; i++) {
         let meshItem = meshItems[i];
         if (meshItem.shouldRotate) {
             if (meshItem.rotation.y < Math.PI * 1.5) {
-                meshItem.rotation.y += Math.PI / 120;
+                meshItem.rotation.y += Math.PI / 90;
             } else if (!meshItem.userDataInit) {
                 meshItem.userDataInit = true;
-				let colorRarity = globalDict["raritycolor"][globalDict[meshItem.userItemCode + ".rarity"][1]];
-				forceUpdateF = true;
+                let colorRarity1 = globalDict["raritycolor"][globalDict[meshItem.userItemCode + ".rarity"][0]];
+                let colorRarity2 = globalDict["raritycolor"][globalDict[meshItem.userItemCode + ".rarity"][1]];
+                let colorRarity3 = globalDict["raritycolor"][globalDict[meshItem.userItemCode + ".rarity"][2]];
+                forceUpdateF = true;
+                let meshUniforms = {
+                    time: { value: 0 },
+                    textureA: { type: "t", value: ItemImg },
+                    textureB: { type: "t", value: meshItem.newTexture },
+                    ItemRarity1: { value: new THREE.Color(colorRarity1) },
+                    ItemRarity2: { value: new THREE.Color(colorRarity2) },
+                    ItemRarity3: { value: new THREE.Color(colorRarity3) }
+                };
+                timeUniforms.push(meshUniforms);
                 meshItem.material = new THREE.ShaderMaterial({
     vertexShader: `
 varying vec2 vUv;
@@ -373,37 +387,51 @@ void main() {
 uniform sampler2D textureA;
 uniform sampler2D textureB;
 uniform vec3 color;
-uniform vec3 ItemRarity;
+uniform vec3 ItemRarity1;
+uniform vec3 ItemRarity2;
+uniform vec3 ItemRarity3;
+uniform float time;
 varying vec2 vUv;
 void main() {
     vec3 c;
     vec2 scaledvuv = vUv;
     scaledvuv -= vec2(0.5);
-    scaledvuv = mat2(1.8, 0.0, 0.0, 1.8) * scaledvuv;
+    scaledvuv = mat2(1.75, 0.0, 0.0, 1.75) * scaledvuv;
     scaledvuv += vec2(0.5);
     scaledvuv.x -= 0.025;
+    scaledvuv.y += 0.025;
     vec4 Ca = texture2D(textureA, vUv);
-	Ca.rgb *= mat3(ItemRarity.r, 0, 0, 0, ItemRarity.g, 0, 0, 0, ItemRarity.b);
+    float time3 = mod(time, 6.0);
+    if (time3 > 4.0){
+        Ca.rgb *= mat3(ItemRarity3.r, 0, 0, 0, ItemRarity3.g, 0, 0, 0, ItemRarity3.b);
+    } else if (time3 > 2.0) {
+        Ca.rgb *= mat3(ItemRarity2.r, 0, 0, 0, ItemRarity2.g, 0, 0, 0, ItemRarity2.b);
+    } else {
+        Ca.rgb *= mat3(ItemRarity1.r, 0, 0, 0, ItemRarity1.g, 0, 0, 0, ItemRarity1.b);
+    }
     vec4 Cb = texture2D(textureB, scaledvuv);
-    c = Cb.rgb * Cb.a + Ca.rgb * Ca.a * (1.0 - Cb.a);
+    c = Ca.rgb * Ca.a;
+    vec2 vUvCenter = vec2(abs(vUv.x - 0.51675), abs(vUv.y - 0.495));
+    if ((vUvCenter.x + vUvCenter.y > 0.225 && vUvCenter.x + vUvCenter.y < 0.25) || (vUvCenter.x + vUvCenter.y > 0.25 && Ca.a > 0.5))
+    {
+        c = vec3(0.0);
+        Ca.a = 1.0;
+    }
+    c = c * (1.0 - Cb.a) + Cb.rgb * Cb.a;
     gl_FragColor= vec4(c, 1.0);
-    if (Ca.a < 0.5) 
+    if (Ca.a < 0.5 && Cb.a < 0.5) 
     {
         gl_FragColor.a = 0.0;
     }
 }`,
-    uniforms: {
-        textureA: { type: "t", value: ItemImg },
-        textureB: { type: "t", value: meshItem.newTexture },
-		ItemRarity: { value: new THREE.Color(colorRarity) }
-    },
-	transparent: true,
+    uniforms: meshUniforms,
+    transparent: true,
     side: THREE.DoubleSide,
     depthWrite: false,
     depthTest: false
 });
             } else if (meshItem.rotation.y < Math.PI * 2) {
-                meshItem.rotation.y += Math.PI / 120;
+                meshItem.rotation.y += Math.PI / 90;
             }
         }
     }
@@ -428,7 +456,10 @@ void main() {
     renderer.render(scene, camera2);
     renderer.autoClear = true;
     renderer.setClearColor("rgb(64, 64, 64)", 1);
-	cloudShaderMaterial.uniforms.time.value = (Date.now() - startTime) / 1000;
+    let shaderTime = (Date.now() - startTime) / 1000;
+    for (let i = 0; i < timeUniforms.length; i++) {
+        timeUniforms[i].time.value = shaderTime;
+    }
 }
 
 function updateMouse() {
