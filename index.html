@@ -177,15 +177,16 @@ fetch("https://www.sgkoishi.app/dbddata/static/killerperks.json").then(r => r.js
 let light = new THREE.AmbientLight(0xffffff, 2); // soft white light
 scene.add(light);
 let now = Date.now();
-
+let currentPerk = "";
+let forceUpdateF = false;
 function animate() {
     requestAnimationFrame(animate);
-    if (mouseDown) {
-        let xMatch = Math.abs(mouse.x % 1 - 0.5);
-        let yMatch = Math.abs(mouse.y % 1 - 0.5);
-        if (xMatch + yMatch < 0.4 && Math.abs(xMatch - yMatch) < 0.4)
-        {
-            let i = Math.round(Math.round(mouse.x - 0.5) + Math.round(mouse.y - 2.5) * 10);
+    let xMatch = Math.abs(mouse.x % 1 - 0.5);
+    let yMatch = Math.abs(mouse.y % 1 - 0.5);
+    if (xMatch + yMatch < 0.5 && Math.abs(xMatch - yMatch) < 0.5)
+    {
+        let i = Math.round(Math.round(mouse.x - 0.5) + Math.round(mouse.y - 2.5) * 10);
+        if (mouseDown) {
             if (!meshPerks[i].userFetch) {
                 meshPerks[i].userFetch = true;
                 let key = meshPerks[i].userPerkCode;
@@ -217,7 +218,28 @@ function animate() {
                     console.log(r);
                 });
             }
-        }
+        } else {
+		    if (forceUpdateF || (meshPerks[i] !== undefined && meshPerks[i].userPerkCode !== currentPerk)){
+		        let perkName = globalDict[meshPerks[i].userPerkCode];
+				let rarityColor = globalDict["raritycolor"][0];
+				let displayText = globalDict["unrevealed"][language];
+			    if (perkName) {
+		            displayText = perkName[language];
+		            rarityColor = globalDict["raritycolor"][globalDict[meshPerks[i].userPerkCode + ".rarity"][1]];
+			    }
+		        textBg.material = new THREE.MeshLambertMaterial({
+			        map: makeText(displayText, "Bold 72px Arial", 84 * 9, 84, 0, 70, "white"),
+			        transparent: true
+			    });
+		        for (let i = 0; i < meshSmokes.length; i++) {
+				    meshSmokes[i].material.color.set(rarityColor);
+		        }
+				forceUpdateF = false;
+			}
+		}
+		if (i < meshPerks.length) {
+		    currentPerk = meshPerks[i].userPerkCode;
+		}
     }
     for (let i = 0; i < meshPerks.length; i++) {
         let meshPerk = meshPerks[i];
@@ -227,8 +249,7 @@ function animate() {
             } else if (!meshPerk.userDataInit) {
                 meshPerk.userDataInit = true;
 				let colorRarity = globalDict["raritycolor"][globalDict[meshPerk.userPerkCode + ".rarity"][1]];
-				console.log(colorRarity);
-				console.log(globalDict[meshPerk.userPerkCode + ".rarity"]);
+				forceUpdateF = true;
                 meshPerk.material = new THREE.ShaderMaterial({
     vertexShader: `
 varying vec2 vUv;
