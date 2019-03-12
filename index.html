@@ -36,10 +36,12 @@
 
     </div>
   </div>
-  <div class="hcenter fixb"><h2 style="color: white;">逃生者：<a href="?q=survivorperks" style="color: green;">技能</a> | <a href="" style="color: white;">物品</a> | <a href="" style="color: white;">附加品</a> | <a href="" style="color: white;">祭品</a></br>杀手：<a href="?q=killerperks" style="color: green;">技能</a> | <a href="" style="color: white;">能力</a> | <a href="" style="color: white;">附加品</a> | <a href="" style="color: white;">祭品</a></h2>
+  <div class="hcenter fixb"><h2 style="color: white;"><a id="myLink" title="开启背景特效，吃显卡的"
+ href="#" onclick="if(!cloudBgLoaded){cloudBgLoaded=true;scene.add(cloudBg);}return false;">背景特效</a></br>逃生者：<a href="?q=survivorperks" style="color: green;">技能</a> | <a href="" style="color: white;">物品</a> | <a href="" style="color: white;">附加品</a> | <a href="" style="color: white;">祭品</a></br>杀手：<a href="?q=killerperks" style="color: green;">技能</a> | <a href="" style="color: white;">能力</a> | <a href="" style="color: white;">附加品</a> | <a href="" style="color: white;">祭品</a></h2>
   </div>
 </body>
 <script type="text/javascript">
+let cloudBgLoaded = false;
 let itemsName = "killerperks";
 let language = "zh-Hans";
 let params = (new URL(document.location)).searchParams;
@@ -228,7 +230,6 @@ void main()
 let cloudBg = new THREE.Mesh(geometry, cloudShaderMaterial);
 cloudBg.position.set(5, 5, 0);
 cloudBg.scale.set(10, 10, 5);
-scene.add(cloudBg);
 let materialSmoke = new THREE.MeshLambertMaterial({
     map: loader.load("https://www.sgkoishi.app/dbd/smoke.png"),
     transparent: true,
