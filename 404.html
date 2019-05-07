@@ -274,7 +274,7 @@ textBg.scale.set(9, 1, 1);
 scene.add(textBg);
 
 let meshItems = [];
-fetch("https://www.sgkoi.dev/dbddata/static/" + itemsName + ".json").then(r => r.json()).then(r => {
+fetch("https://sgkoi.dev/dbddata/static/" + itemsName + ".json").then(r => r.json()).then(r => {
     let itemsShuffled = shuffleArray(r);
     for (let i = 0; i < itemsShuffled.length; i++)
     {
