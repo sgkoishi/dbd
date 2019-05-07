@@ -67,7 +67,7 @@ function shuffleArray(array) {
 
 let list = ["unrevealed", "unrevealed.owner", "rarity", "raritycolor"];
 let globalDict = {};
-list.forEach(element => fetch("https://www.sgkoishi.app/dbddata/static/" + element + ".json").then(r => r.json()).then(r => globalDict[element] = r));
+list.forEach(element => fetch("https://sgkoi.dev/dbddata/static/" + element + ".json").then(r => r.json()).then(r => globalDict[element] = r));
 
 function randomArray(min, max, length, isint) {
     return isint ? Array.from({
@@ -95,7 +95,7 @@ let mouseDown = false;
 let pureMouse = new THREE.Vector2(-100, -100);
 let inCMouse = new THREE.Vector2(-100, -100);
 let loader = new THREE.TextureLoader();
-let ItemImg = loader.load("https://www.sgkoishi.app/dbddata/static/perks.png");
+let ItemImg = loader.load("https://sgkoi.dev/dbddata/static/perks.png");
 let materialPerk = new THREE.MeshLambertMaterial({
     map: ItemImg,
     transparent: true,
@@ -234,7 +234,7 @@ let cloudBg = new THREE.Mesh(geometry, cloudShaderMaterial);
 cloudBg.position.set(5, 5, 0);
 cloudBg.scale.set(10, 10, 5);
 let materialSmoke = new THREE.MeshLambertMaterial({
-    map: loader.load("https://www.sgkoishi.app/dbd/smoke.png"),
+    map: loader.load("https://sgkoi.dev/dbd/smoke.png"),
     transparent: true,
     depthWrite: false,
     depthTest: false
@@ -269,16 +269,12 @@ let textBg = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
     map: makeText("","Bold 72px Arial", 84*9, 84, 0, 70, "white"),
     transparent: true
 }));
-//blackBg.material.color.set(0);
 textBg.position.set(15, 0.25, 0);
 textBg.scale.set(9, 1, 1);
 scene.add(textBg);
-// https://www.sgkoishi.app/img/koishi.png
-// https://www.sgkoishi.app/dbddata/static/perks.png
-// https://www.sgkoishi.app/dbd/smoke.png
 
 let meshItems = [];
-fetch("https://www.sgkoishi.app/dbddata/static/" + itemsName + ".json").then(r => r.json()).then(r => {
+fetch("https://www.sgkoi.dev/dbddata/static/" + itemsName + ".json").then(r => r.json()).then(r => {
     let itemsShuffled = shuffleArray(r);
     for (let i = 0; i < itemsShuffled.length; i++)
     {
@@ -291,7 +287,7 @@ fetch("https://www.sgkoishi.app/dbddata/static/" + itemsName + ".json").then(r =
         scene.add(meshItem);
     }
 });
-let light = new THREE.AmbientLight(0xffffff, 2); // soft white light
+let light = new THREE.AmbientLight(0xffffff, 2);
 scene.add(light);
 let currentItem = "";
 let forceUpdateF = false;
@@ -306,30 +302,30 @@ function animate() {
             if (!meshItems[i].userFetch) {
                 meshItems[i].userFetch = true;
                 let key = meshItems[i].userItemCode;
-                fetch("https://www.sgkoishi.app/dbddata/" + key + "/owner.json").then(r => {
+                fetch("https://sgkoi.dev/dbddata/" + key + "/owner.json").then(r => {
                     return r.json();
                 }).then(r => {
                     globalDict[key + ".owner"] = r.owner;
                     let ownerCode = r.owner;
                     if (!globalDict[ownerCode]) {
-                        fetch("https://www.sgkoishi.app/dbddata/" + ownerCode + "/data.json").then(r => {
+                        fetch("https://sgkoi.dev/dbddata/" + ownerCode + "/data.json").then(r => {
                             return r.json();
                         }).then(r => {
                             globalDict[ownerCode] = r;
                         });
                     }
                 }, e => {});
-                fetch("https://www.sgkoishi.app/dbddata/" + key + "/rarity.json").then(r => {
+                fetch("https://sgkoi.dev/dbddata/" + key + "/rarity.json").then(r => {
                     return r.json();
                 }).then(r => {
                     globalDict[key + ".rarity"] = r;
                 });
-                fetch("https://www.sgkoishi.app/dbddata/" + key + "/data.json").then(r => {
+                fetch("https://sgkoi.dev/dbddata/" + key + "/data.json").then(r => {
                     return r.json();
                 }).then(r => {
                     globalDict[key] = r;
                     meshItems[i].shouldRotate = true;
-                    meshItems[i].newTexture = loader.load("https://www.sgkoishi.app/dbddata/" + key + "/icon.png");
+                    meshItems[i].newTexture = loader.load("https://sgkoi.dev/dbddata/" + key + "/icon.png");
                 }, (r) => {
                     console.log(r);
                 });
